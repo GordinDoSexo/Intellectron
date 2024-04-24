@@ -1,0 +1,70 @@
+import robocode.*;
+
+public class Intellectron extends AdvancedRobot {
+    
+    boolean movingForward;
+
+    public void run() {
+        // Define as cores do robô
+        setBodyColor(java.awt.Color.blue);
+        setGunColor(java.awt.Color.black);
+        setRadarColor(java.awt.Color.gray);
+        setBulletColor(java.awt.Color.green);
+        setScanColor(java.awt.Color.yellow);
+
+        // Define o robô para se mover enquanto atira
+        setAdjustGunForRobotTurn(true);
+        setAdjustRadarForGunTurn(true);
+        
+        while (true) {
+            // Move para frente
+            setAhead(40000);
+            movingForward = true;
+            // Gira o radar completo para detectar robôs
+            turnRadarRight(Double.POSITIVE_INFINITY);
+        }
+    }
+
+    public void onScannedRobot(ScannedRobotEvent e) {
+        // Calcula o ângulo para onde o canhão deve apontar
+        double absoluteBearing = getHeadingRadians() + e.getBearingRadians();
+        // Define o radar para mirar no inimigo
+        setTurnRadarRightRadians(Utils.normalRelativeAngle(absoluteBearing - getRadarHeadingRadians()) * 2);
+        // Define o canhão para mirar no inimigo
+        setTurnGunRightRadians(Utils.normalRelativeAngle(absoluteBearing - getGunHeadingRadians()));
+        
+        // Calcula a potência do tiro baseada na distância
+        double firePower = Math.min(400 / e.getDistance(), 3);
+        // Atira no inimigo
+        setFire(firePower);
+        
+        // Desvia de balas
+        if (e.getDistance() < 200 && !movingForward) {
+            // Se estiver perto, mova-se para trás
+            setBack(100);
+        } else {
+            // Caso contrário, continue movendo-se para frente
+            setAhead(100);
+        }
+    }
+    
+    public void onHitWall(HitWallEvent e) {
+        // Quando atingir uma parede, vira-se para outro lado
+        if (movingForward) {
+            setBack(150);
+            movingForward = false;
+        } else {
+            setAhead(150);
+            movingForward = true;
+        }
+    }
+    
+    public void onHitRobot(HitRobotEvent e) {
+        // Desvia de robôs
+        if (e.getBearing() > -90 && e.getBearing() <= 90) {
+            setBack(100);
+        } else {
+            setAhead(100);
+        }
+    }
+}
