@@ -1,0 +1,105 @@
+Intellectron: O Titã Verde Implacável em Robocode
+
+
+
+Código:
+
+Java
+import java.awt.Color;
+import java.util.Random;
+
+// Classe principal do robô
+public class Intellectron extends AdvancedRobot {
+
+    // Variáveis para controlar o robô
+    private Random random = new Random();
+    private double heading = 0; // Ângulo do robô
+    private double gunHeading = 0; // Ângulo do canhão
+    private EnemyInfo[] lastScanResults = null; // Armazena os resultados da última varredura
+
+    // Inicialização do robô
+    public void run() {
+        // Defina a cor do corpo e do canhão
+        setBodyColor(Color.GREEN);
+        setGunColor(Color.DARK_GREEN);
+
+        // Entre em modo de combate
+        setAdjustGunForBodyTurn(true);
+        setTurnGunForBodyTurn(true);
+
+        // Loop principal do robô
+        while (true) {
+            // Atualize as informações do inimigo
+            updateEnemyInfo();
+
+            // Escolha uma ação aleatória
+            int action = random.nextInt(4);
+
+            // Desviar
+            if (action == 0) {
+                dodge();
+            }
+
+            // Atirar
+            else if (action == 1) {
+                fireAtTarget();
+            }
+
+            // Mover e escanear
+            else if (action == 2) {
+                moveAndScan();
+            }
+
+            // Perseguir inimigo com baixa energia
+            else {
+                chaseLowEnergyEnemy();
+            }
+
+            // Execute a ação escolhida
+            execute();
+        }
+    }
+
+    // Função para atualizar as informações do inimigo
+    private void updateEnemyInfo() {
+        scan();
+        lastScanResults = getScanResults();
+    }
+
+    // Função para desviar
+    private void dodge() {
+        // Gire para um ângulo aleatório
+        setTurnAngle(random.nextDouble() * 360);
+
+        // Mova um pouco para frente
+        setAhead(100);
+    }
+
+    // Função para atirar no alvo mais próximo
+    private void fireAtTarget() {
+        if (lastScanResults != null) {
+            // Vire o canhão para o inimigo mais próximo
+            double angle = getGunHeading() + lastScanResults[0].getBearing();
+            setTurnGunAngle(normalizeAngle(angle - gunHeading));
+
+            // Atire com poder de fogo proporcional à energia do inimigo
+            double energy = lastScanResults[0].getEnergy();
+            double firePower = Math.min(energy / 4, 3.0);
+            fire(firePower);
+        }
+    }
+
+    // Função para mover e escanear
+    private void moveAndScan() {
+        // Mova um pouco para frente
+        setAhead(100);
+
+        // Gire um pouco para a direita
+        setTurnAngle(random.nextDouble() * 45);
+
+        // Escanear o campo de batalha
+        scan();
+    }
+
+    // Função para perseguir inimigo com baixa energia
+    private
